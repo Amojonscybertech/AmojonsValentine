@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>💔 Amojons Valentine Denied 💔</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{
+  background:black;
+  font-family:monospace;
+  height:100vh;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  overflow:hidden;
+  color:#ff3366;
+}
+
+/* MATRIX + FLOATING HEARTS */
+.matrix{
+  position:fixed;
+  inset:0;
+  z-index:-2;
+}
+.matrix span{
+  position:absolute;
+  font-size:14px;
+  opacity:.15;
+  animation:fall linear infinite;
+  user-select:none;
+}
+@keyframes fall{
+  from{transform:translateY(-100%)}
+  to{transform:translateY(110vh)}
+}
+.heart{
+  position:absolute;
+  color:#ff3366;
+  font-size:18px;
+  opacity:0.4;
+  animation:heartFloat linear infinite;
+}
+@keyframes heartFloat{
+  from{transform:translateY(110vh) rotate(0deg);}
+  to{transform:translateY(-10vh) rotate(360deg);}
+}
+
+/* DENIED BOX */
+.box{
+  border:2px solid #ff3366;
+  padding:30px;
+  width:90%;
+  max-width:500px;
+  text-align:center;
+  box-shadow:0 0 30px #ff3366;
+  animation:glow 2s infinite alternate;
+  position:relative;
+}
+@keyframes glow{
+  0%{box-shadow:0 0 10px #ff3366;}
+  50%{box-shadow:0 0 35px #ff0000;}
+  100%{box-shadow:0 0 50px #ff3366;}
+}
+
+h1{
+  font-size:26px;
+  margin-bottom:15px;
+  color:#ff0000;
+  text-shadow:0 0 20px #ff0000,0 0 40px #ff3366;
+}
+
+ul{
+  list-style:none;
+  margin:20px 0;
+  padding:0;
+}
+
+li{
+  font-size:20px;
+  margin:12px 0;
+  padding:10px 16px;
+  border-radius:8px;
+  opacity:0;
+  transform:translateY(-50px) rotate(-5deg);
+  transition:0.5s;
+  text-shadow:0 0 10px #ff3366,0 0 20px #ff0000;
+}
+
+/* DENIED EFFECT */
+.denied{
+  border:2px solid #ff0000;
+  color:#ff0000;
+  animation:shakeFade 1.5s forwards;
+}
+@keyframes shakeFade{
+  0%{transform:translateX(0) rotate(0deg);opacity:1;}
+  25%{transform:translateX(-10px) rotate(-2deg);}
+  50%{transform:translateX(10px) rotate(2deg);}
+  75%{transform:translateX(-5px) rotate(-1deg);}
+  100%{transform:translateY(-50px) rotate(0deg);opacity:1;}
+}
+
+/* COUNTDOWN */
+.countdown{
+  font-size:36px;
+  color:#ff33ff;
+  text-shadow:0 0 10px #ff33ff,0 0 20px #ff00ff;
+  margin-bottom:15px;
+  animation:blink 1s infinite;
+}
+@keyframes blink{
+  0%,50%,100%{opacity:1;}
+  25%,75%{opacity:0;}
+}
+
+/* NOTE */
+.note{
+  font-size:12px;
+  opacity:.7;
+  margin-top:10px;
+}
+</style>
+</head>
+
+<body>
+
+<!-- MATRIX -->
+<div class="matrix" id="matrix"></div>
+
+<!-- DENIED BOX -->
+<div class="box">
+  <h1>💔 AMOJONS DENIED PARTICIPANTS 💔</h1>
+  <div class="countdown" id="countdown">3</div>
+  <ul id="deniedList"></ul>
+  <div class="note">
+    Only the strongest hearts win 💖. Better luck next time! 🔐
+  </div>
+</div>
+
+<script>
+/* MATRIX LETTERS */
+const matrix=document.getElementById("matrix");
+for(let i=0;i<80;i++){
+  const s=document.createElement("span");
+  s.innerText=Math.random().toString(36).slice(2,7);
+  s.style.left=Math.random()*100+"%";
+  s.style.animationDuration=3+Math.random()*6+"s";
+  matrix.appendChild(s);
+}
+
+/* FLOATING HEARTS */
+for(let i=0;i<15;i++){
+  const h=document.createElement("div");
+  h.className="heart";
+  h.innerText="💔";
+  h.style.left=Math.random()*100+"%";
+  h.style.animationDuration=5+Math.random()*10+"s";
+  h.style.fontSize=15+Math.random()*25+"px";
+  matrix.appendChild(h);
+}
+
+/* DENIED LOGIC */
+const deniedList=document.getElementById("deniedList");
+const countdownEl = document.getElementById("countdown");
+let count = 3;
+
+// Pull denied participants from localStorage
+const requests = JSON.parse(localStorage.getItem("requests")) || [];
+const denied = requests.filter(r => r.denied);
+
+// Countdown animation
+function startCountdown(cb){
+  countdownEl.textContent = count;
+  const timer = setInterval(()=>{
+    count--;
+    if(count>0){
+      countdownEl.textContent = count;
+    }else{
+      clearInterval(timer);
+      countdownEl.style.display='none';
+      cb();
+    }
+  },1000);
+}
+
+// Reveal denied participant
+function revealDenied(name,delay,cb){
+  const li=document.createElement("li");
+  li.className="denied";
+  li.textContent=name + " 💔";
+  deniedList.appendChild(li);
+  li.style.animationDelay = delay + "ms";
+  if(cb) setTimeout(cb, delay);
+}
+
+// Display denied participants
+if(denied.length === 0){
+  deniedList.innerHTML="<li>No denied participants yet</li>";
+}else{
+  startCountdown(()=>{
+    denied.forEach((p,i)=>{
+      revealDenied(p.name || p, i*800);
+    });
+  });
+}
+</script>
+
+</body>
+</html>

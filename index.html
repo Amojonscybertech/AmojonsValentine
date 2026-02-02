@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Amojons Valentine System</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  background:black;
+  color:#00ff99;
+  font-family:monospace;
+  height:100vh;
+  overflow:hidden;
+}
+
+/* MATRIX BACKGROUND */
+.matrix{
+  position:fixed;
+  inset:0;
+  z-index:-1;
+}
+.matrix span{
+  position:absolute;
+  color:#00ff33;
+  font-size:14px;
+  opacity:.25;
+  animation:fall linear infinite;
+}
+@keyframes fall{
+  from{transform:translateY(-100%)}
+  to{transform:translateY(110vh)}
+}
+
+/* TERMINAL */
+.terminal{
+  position:absolute;
+  top:50%;
+  left:50%;
+  transform:translate(-50%,-50%);
+  width:95%;
+  max-width:420px;
+  border:1px solid #00ff99;
+  padding:20px;
+  box-shadow:0 0 30px #00ff99;
+  animation:glow 2s infinite alternate;
+}
+@keyframes glow{
+  0%{box-shadow:0 0 10px #00ff99}
+  50%{box-shadow:0 0 25px red}
+  100%{box-shadow:0 0 35px #00ff99}
+}
+
+h2{text-align:center;margin-bottom:10px;}
+.output{min-height:120px;font-size:14px;white-space:pre-wrap;margin-bottom:10px;}
+input,button{
+  width:100%;
+  padding:10px;
+  background:black;
+  color:#00ff99;
+  border:1px solid #00ff99;
+  margin-top:8px;
+  font-family:monospace;
+}
+button:hover{background:#00ff99;color:black;cursor:pointer;}
+
+.progress{width:100%;height:8px;border:1px solid #00ff99;margin-top:8px;display:none;}
+.bar{height:100%;width:0%;background:#00ff99;}
+
+.footer{text-align:center;font-size:11px;opacity:.6;margin-top:10px;}
+.blink{animation:blink 1s infinite}
+@keyframes blink{50%{opacity:0}}
+
+/* NAVIGATION BUTTONS */
+.navBtn{
+  width:100%;
+  margin-top:12px;
+  padding:10px;
+  background:#ff33ff;
+  border:1px solid #ff33ff;
+  color:black;
+  font-weight:bold;
+}
+.navBtn:hover{
+  background:black;
+  color:#ff33ff;
+  cursor:pointer;
+}
+.adminBtn{
+  background:#ff0000;
+  border:1px solid #ff0000;
+  color:black;
+}
+.adminBtn:hover{
+  background:black;
+  color:#ff0000;
+}
+</style>
+</head>
+
+<body>
+
+<div class="matrix" id="matrix"></div>
+
+<div class="terminal">
+  <h2>💘 AMOJONS VALENTINE 💘</h2>
+  <div class="output" id="out">
+> Initializing Amojons Secure Protocol<span class="blink">█</span>
+  </div>
+  <input id="name" placeholder="Enter your name">
+  <button id="btn" onclick="submit()">REQUEST VALENTINE ACCESS</button>
+  
+  <!-- NAVIGATION -->
+  <button class="navBtn" onclick="viewWinners()">VIEW WINNERS</button>
+  <button class="navBtn adminBtn" onclick="adminLogin()">ADMIN PANEL</button>
+
+  <div class="progress" id="prog">
+    <div class="bar" id="bar"></div>
+  </div>
+  <div class="footer">Amojons Secure System © 2026</div>
+</div>
+
+<audio id="typeSound" preload="auto">
+  <source src="https://assets.mixkit.co/sfx/preview/mixkit-keyboard-typing-1386.mp3">
+</audio>
+
+<script>
+/* MATRIX EFFECT */
+const matrix=document.getElementById("matrix");
+for(let i=0;i<90;i++){
+  const s=document.createElement("span");
+  s.innerText=Math.random().toString(36).slice(2,8);
+  s.style.left=Math.random()*100+"%";
+  s.style.animationDuration=3+Math.random()*6+"s";
+  matrix.appendChild(s);
+}
+
+/* TERMINAL LOGIC */
+const out=document.getElementById("out");
+const sound=document.getElementById("typeSound");
+const prog=document.getElementById("prog");
+const bar=document.getElementById("bar");
+const btn=document.getElementById("btn");
+
+function typeText(text, cb){
+  let i=0;
+  out.textContent="";
+  const t=setInterval(()=>{
+    sound.currentTime=0; sound.play();
+    out.textContent+=text.charAt(i);
+    i++;
+    if(i>=text.length){ clearInterval(t); out.textContent+="\n"; cb && cb(); }
+  },35);
+}
+
+/* INTRO */
+typeText("> Welcome to Amojons Valentine Protocol...\n> Awaiting user input █");
+
+/* ACCESS MESSAGES */
+const ACCESS_MSGS=[
+  "> ACCESS GRANTED ✔ Pending final approval…",
+  "> ACCESS PENDING ⏳ Stand by…",
+  "> IDENTITY VERIFIED ✔ Awaiting Valentine decision…",
+  "> SYSTEM ANALYSIS COMPLETE 🔐"
+];
+
+/* SUBMIT REQUEST */
+function submit(){
+  const name=document.getElementById("name").value.trim();
+  if(!name){ typeText("> ERROR: Name required ❌"); return; }
+
+  btn.disabled=true;
+  prog.style.display="block";
+  bar.style.width="0%";
+
+  typeText("> Scanning identity: "+name+"...\n", ()=>{
+    let p=0;
+    const scan=setInterval(()=>{
+      p+=10; bar.style.width=p+"%";
+      if(p===30) out.textContent+="> Checking threat level...\n";
+      if(p===60) out.textContent+="> Verifying Valentine intent...\n";
+      if(p>=100){ clearInterval(scan); finalize(name); }
+    },250);
+  });
+}
+
+function finalize(name){
+  // Save as object with approved:false
+  const list=JSON.parse(localStorage.getItem("requests")) || [];
+  list.push({name:name, approved:false});
+  localStorage.setItem("requests", JSON.stringify(list));
+  localStorage.setItem("viewer", name);
+
+  const msg=ACCESS_MSGS[Math.floor(Math.random()*ACCESS_MSGS.length)];
+  typeText(msg+"\n", ()=> countdown());
+}
+
+function countdown(){
+  let c=5;
+  const t=setInterval(()=>{
+    out.textContent+=`> Redirecting in ${c}...\n`;
+    c--;
+    if(c<0){
+      clearInterval(t);
+      window.location.href="https://wa.me/256758055762?text=I%20have%20requested%20Valentine%20access%20❤️";
+    }
+  },800);
+}
+
+/* VIEW WINNERS */
+function viewWinners(){
+  window.location.href="winners.html"; // winner page link
+}
+
+/* ADMIN LOGIN */
+function adminLogin(){
+  const pass = prompt("Enter Admin Password:");
+  if(pass === "AmojonsAdmin123"){ // change password as needed
+    window.location.href="admin.html"; // admin panel link
+  }else{
+    alert("❌ Incorrect password!");
+  }
+}
+</script>
+</body>
+</html>

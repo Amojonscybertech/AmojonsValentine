@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>💻 Amojons Valentine Admin Panel 💻</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+/* --- GLOBAL RESET --- */
+*{box-sizing:border-box;margin:0;padding:0}
+
+/* --- BODY --- */
+body{
+  background:#000011;
+  font-family:monospace;
+  min-height:100vh;
+  display:flex;
+  justify-content:center;
+  align-items:flex-start;
+  padding-top:40px;
+  overflow:hidden;
+  color:#00ff99;
+}
+
+/* --- MATRIX / FLOATING HEARTS --- */
+.matrix{
+  position:fixed;
+  inset:0;
+  z-index:-3;
+}
+.matrix span{
+  position:absolute;
+  font-size:14px;
+  opacity:.1;
+  color:#00ff99;
+  animation:fall linear infinite;
+  user-select:none;
+}
+@keyframes fall{
+  from{transform:translateY(-100%)}
+  to{transform:translateY(110vh)}
+}
+.heart{
+  position:absolute;
+  color:#ff00cc;
+  font-size:16px;
+  opacity:0.3;
+  animation:heartFloat linear infinite;
+}
+@keyframes heartFloat{
+  from{transform:translateY(110vh) rotate(0deg);}
+  to{transform:translateY(-10vh) rotate(360deg);}
+}
+
+/* --- PANEL --- */
+.panel{
+  border:2px solid #00ffff;
+  padding:30px;
+  width:90%;
+  max-width:650px;
+  background:rgba(0,0,0,0.7);
+  border-radius:10px;
+  backdrop-filter: blur(5px);
+  box-shadow:0 0 30px #00ffff, 0 0 15px #ff00cc inset;
+  animation:panelGlow 3s infinite alternate;
+}
+@keyframes panelGlow{
+  0%{box-shadow:0 0 20px #00ffff, 0 0 10px #ff00cc inset;}
+  50%{box-shadow:0 0 50px #00ff99, 0 0 20px #ff00ff inset;}
+  100%{box-shadow:0 0 60px #00ffff, 0 0 30px #ff00cc inset;}
+}
+
+/* --- HEADER TYPEWRITER --- */
+h1{
+  font-size:28px;
+  text-align:center;
+  margin-bottom:25px;
+  color:#00ffff;
+  text-shadow:0 0 15px #00ffff, 0 0 25px #ff00ff, 0 0 40px #00ff99;
+  min-height:36px;
+  letter-spacing:1px;
+}
+
+/* --- REQUEST LIST --- */
+ul{list-style:none;padding:0;margin:0;}
+li{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin:10px 0;
+  padding:10px 14px;
+  border-radius:8px;
+  background:rgba(0,0,0,0.25);
+  border:1px solid #00ffff;
+  box-shadow:0 0 15px #00ffff inset;
+  color:#00ff99;
+  opacity:0;
+  transform:translateX(-50px);
+  transition:0.4s all;
+  font-weight:500;
+}
+li.show{opacity:1; transform:translateX(0);}
+li.approved{border-color:#00ff99;color:#00ff99; box-shadow:0 0 15px #00ff99 inset;}
+li.denied{border-color:#ff0044;color:#ff0044; box-shadow:0 0 15px #ff0044 inset;}
+li.winner{
+  animation:flash 1.2s infinite alternate;
+  font-weight:bold;
+  color:#ffff00;
+  border:1px solid #ffff00;
+  box-shadow:0 0 25px #ffff00, 0 0 15px #00ffff inset;
+}
+
+/* --- WINNER FLASH --- */
+@keyframes flash{
+  0%{box-shadow:0 0 15px #ffff00, 0 0 10px #00ffff inset;}
+  50%{box-shadow:0 0 35px #ffff33, 0 0 20px #00ffcc inset;}
+  100%{box-shadow:0 0 50px #ffff66, 0 0 25px #00ffff inset;}
+}
+
+/* --- BUTTONS --- */
+button{
+  background:#000011;
+  color:#00ffff;
+  border:1px solid #00ffff;
+  padding:8px 14px;
+  cursor:pointer;
+  margin-left:5px;
+  font-family:monospace;
+  font-weight:bold;
+  transition:0.3s all;
+  border-radius:6px;
+}
+button:hover{
+  background:#00ffff;
+  color:black;
+  box-shadow:0 0 15px #00ffff, 0 0 15px #ff00ff inset;
+  transform:scale(1.05);
+}
+
+/* --- MAIN BUTTONS --- */
+.reset, .runWinners{
+  margin-top:15px;
+  width:100%;
+  padding:12px;
+  font-size:18px;
+  font-weight:bold;
+  border-radius:8px;
+}
+
+/* --- PASSWORD --- */
+#passwordDiv{
+  text-align:center;
+  margin-bottom:25px;
+}
+#passwordDiv input{
+  width:70%;
+  padding:10px;
+  margin-right:5px;
+  background:#000011;
+  color:#00ffff;
+  border:1px solid #00ffff;
+  border-radius:6px;
+}
+#passwordDiv button{
+  padding:10px 14px;
+}
+</style>
+</head>
+<body>
+
+<!-- MATRIX -->
+<div class="matrix" id="matrix"></div>
+
+<!-- PANEL -->
+<div class="panel">
+  <h1 id="header">💻 Amojons Admin Panel 💻</h1>
+
+  <!-- PASSWORD -->
+  <div id="passwordDiv">
+    <input type="password" id="adminPass" placeholder="Enter admin password">
+    <button onclick="checkPassword()">🔐 Enter</button>
+  </div>
+
+  <!-- REQUEST LIST -->
+  <ul id="requestList"></ul>
+  <button class="runWinners" onclick="selectWinners()">🎯 Run Winner Selection</button>
+  <button class="reset" onclick="resetAll()">🧹 Reset All Requests</button>
+</div>
+
+<!-- SOUND EFFECT -->
+<audio id="beep" src="https://assets.mixkit.co/sfx/preview/mixkit-system-beep-2013.mp3"></audio>
+
+<script>
+/* --- MATRIX LETTERS --- */
+const matrix=document.getElementById("matrix");
+for(let i=0;i<80;i++){
+  const s=document.createElement("span");
+  s.innerText=Math.random().toString(36).slice(2,7);
+  s.style.left=Math.random()*100+"%";
+  s.style.animationDuration=3+Math.random()*6+"s";
+  matrix.appendChild(s);
+}
+/* --- FLOATING HEARTS --- */
+for(let i=0;i<15;i++){
+  const h=document.createElement("div");
+  h.className="heart";
+  h.innerText="❤️";
+  h.style.left=Math.random()*100+"%";
+  h.style.animationDuration=5+Math.random()*10+"s";
+  h.style.fontSize=15+Math.random()*25+"px";
+  matrix.appendChild(h);
+}
+
+/* --- ADMIN LOGIC --- */
+let requests = JSON.parse(localStorage.getItem("requests")) || [];
+const requestList=document.getElementById("requestList");
+const password="amo123";
+const passwordDiv=document.getElementById("passwordDiv");
+const beep=document.getElementById("beep");
+const header=document.getElementById("header");
+
+// PASSWORD CHECK
+function checkPassword(){
+  const val=document.getElementById("adminPass").value;
+  if(val===password){
+    passwordDiv.style.display="none";
+    typeWriterHeader("💻 Amojons Admin Panel 💻", 0, ()=>renderRequests());
+  } else { alert("❌ Wrong password!"); }
+}
+
+// TYPEWRITER HEADER
+function typeWriterHeader(text,i,cb){
+  if(i<text.length){ header.textContent+=text[i]; setTimeout(()=>typeWriterHeader(text,i+1,cb),40);}
+  else{ if(cb) cb(); }
+}
+
+// RENDER REQUESTS
+function renderRequests(){
+  requestList.innerHTML="";
+  if(requests.length===0){ requestList.innerHTML="<li>No requests found</li>"; return; }
+  requests.forEach((obj,index)=>{
+    const li=document.createElement("li");
+    li.textContent=obj.name;
+    if(obj.approved) li.classList.add("approved");
+    if(obj.denied) li.classList.add("denied");
+    const approveBtn=document.createElement("button");
+    approveBtn.textContent="✔ Approve";
+    approveBtn.onclick=()=>approve(index,li);
+    const denyBtn=document.createElement("button");
+    denyBtn.textContent="❌ Deny";
+    denyBtn.onclick=()=>deny(index,li);
+    li.appendChild(approveBtn);
+    li.appendChild(denyBtn);
+    requestList.appendChild(li);
+    setTimeout(()=>li.classList.add("show"), index*150);
+  });
+}
+
+// APPROVE / DENY
+function approve(i,li){
+  li.classList.remove("denied");
+  li.classList.add("approved");
+  beep.play();
+
+  requests[i] = { name: requests[i].name || requests[i], approved: true, denied: false };
+  localStorage.setItem("requests", JSON.stringify(requests));
+  updateWinnersStorage();
+  renderRequests();
+}
+function deny(i,li){
+  li.classList.remove("approved");
+  li.classList.add("denied");
+  beep.play();
+
+  requests[i] = { name: requests[i].name || requests[i], approved: false, denied: true };
+  localStorage.setItem("requests", JSON.stringify(requests));
+  updateWinnersStorage();
+  renderRequests();
+}
+
+// RESET ALL
+function resetAll(){ 
+  if(confirm("⚠️ This will delete all requests!")){
+    localStorage.removeItem("requests"); 
+    localStorage.removeItem("winners"); 
+    requests=[]; 
+    renderRequests(); 
+  } 
+}
+
+// SELECT WINNERS
+function selectWinners(){
+  const approved = requests.filter(r=>r.approved).map(r=>r.name);
+  if(approved.length===0){ alert("❌ No approved requests!"); return; }
+  let shuffled=[...approved];
+  for(let i=shuffled.length-1;i>0;i--){ 
+    const j=Math.floor(Math.random()*(i+1)); 
+    [shuffled[i],shuffled[j]]=[shuffled[j],shuffled[i]]; 
+  }
+  const winners={
+    ultimate:shuffled[0]||"No participant",
+    vip:shuffled[1]||"No participant",
+    lucky:shuffled[2]||"No participant"
+  };
+  requestList.querySelectorAll("li").forEach(li=>li.classList.remove("winner"));
+  [winners.ultimate, winners.vip, winners.lucky].forEach(w=>{
+    const li=Array.from(requestList.children).find(x=>x.textContent.includes(w));
+    if(li) li.classList.add("winner");
+  });
+  alert(`🎉 Winners Selected!\nUltimate: ${winners.ultimate}\nVIP: ${winners.vip}\nLucky: ${winners.lucky}`);
+  localStorage.setItem("winners", JSON.stringify(winners));
+}
+
+// UPDATE WINNERS STORAGE AUTOMATICALLY
+function updateWinnersStorage(){
+  const approved = requests.filter(r=>r.approved);
+  const winners = {
+    ultimate: approved[0]?.name || null,
+    vip: approved[1]?.name || null,
+    lucky: approved[2]?.name || null
+  };
+  localStorage.setItem("winners", JSON.stringify(winners));
+}
+</script>
+</body>
+</html>

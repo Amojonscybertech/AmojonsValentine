@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>💖 Amojons Valentine Winners 💖</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  background:black;
+  font-family:monospace;
+  height:100vh;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  overflow:hidden;
+  color:#00ff99;
+}
+
+/* MATRIX + FLOATING HEARTS */
+.matrix{
+  position:fixed;
+  inset:0;
+  z-index:-2;
+}
+.matrix span{
+  position:absolute;
+  font-size:14px;
+  opacity:.15;
+  animation:fall linear infinite;
+  user-select:none;
+}
+@keyframes fall{
+  from{transform:translateY(-100%)}
+  to{transform:translateY(110vh)}
+}
+.heart{
+  position:absolute;
+  color:#ff3366;
+  font-size:18px;
+  opacity:0.4;
+  animation:heartFloat linear infinite;
+}
+@keyframes heartFloat{
+  from{transform:translateY(110vh) rotate(0deg);}
+  to{transform:translateY(-10vh) rotate(360deg);}
+}
+
+/* WINNER BOX */
+.box{
+  border:2px solid #00ff99;
+  padding:30px;
+  width:90%;
+  max-width:500px;
+  text-align:center;
+  box-shadow:0 0 30px #00ff99;
+  animation:glow 2s infinite alternate;
+  position:relative;
+}
+@keyframes glow{
+  0%{box-shadow:0 0 10px #00ff99}
+  50%{box-shadow:0 0 35px #ff3366}
+  100%{box-shadow:0 0 50px #00ff99}
+}
+
+h1{
+  font-size:26px;
+  margin-bottom:15px;
+  color:#ff3366;
+  text-shadow:0 0 20px red,0 0 40px #ff33ff;
+}
+
+ul{
+  list-style:none;
+  margin:20px 0;
+  padding:0;
+}
+
+li{
+  font-size:20px;
+  margin:12px 0;
+  padding:10px 16px;
+  border-radius:8px;
+  opacity:0;
+  transform:translateX(-100%);
+  transition:0.5s;
+  letter-spacing:1px;
+  text-shadow:0 0 10px #00ff99,0 0 20px #00ff99;
+}
+
+/* CATEGORY COLORS */
+.ultimate{
+  color:#ff0000;
+  border:2px solid #ff0000;
+  box-shadow:0 0 15px #ff0000;
+  text-shadow:0 0 10px #ff0000,0 0 20px #ff3366;
+}
+.vip{
+  color:#00ff00;
+  border:2px solid #00ff00;
+  box-shadow:0 0 15px #00ff00;
+  text-shadow:0 0 10px #00ff00,0 0 20px #00ff99;
+}
+.lucky{
+  color:#00ffff;
+  border:2px solid #00ffff;
+  box-shadow:0 0 15px #00ffff;
+  text-shadow:0 0 10px #00ffff,0 0 20px #33ffff;
+}
+
+/* ANIMATION */
+@keyframes slideIn{
+  0%{opacity:0; transform:translateX(-100%) scale(0.8);}
+  100%{opacity:1; transform:translateX(0) scale(1);}
+}
+
+/* COUNTDOWN */
+.countdown{
+  font-size:36px;
+  color:#ff33ff;
+  text-shadow:0 0 10px #ff33ff,0 0 20px #ff00ff;
+  margin-bottom:15px;
+  animation:blink 1s infinite;
+}
+@keyframes blink{
+  0%,50%,100%{opacity:1;}
+  25%,75%{opacity:0;}
+}
+
+.note{
+  font-size:12px;
+  opacity:.7;
+  margin-top:10px;
+}
+</style>
+</head>
+
+<body>
+
+<!-- MATRIX -->
+<div class="matrix" id="matrix"></div>
+
+<!-- WINNER BOX -->
+<div class="box">
+  <h1>💖 AMOJONS VALENTINE WINNERS 💖</h1>
+  <div class="countdown" id="countdown">3</div>
+  <ul id="winnerList"></ul>
+  <div class="note">
+    Winners selected by Amojons Secure Algorithm 🔐
+  </div>
+</div>
+
+<script>
+/* MATRIX LETTERS */
+const matrix=document.getElementById("matrix");
+for(let i=0;i<80;i++){
+  const s=document.createElement("span");
+  s.innerText=Math.random().toString(36).slice(2,7);
+  s.style.left=Math.random()*100+"%";
+  s.style.animationDuration=3+Math.random()*6+"s";
+  matrix.appendChild(s);
+}
+
+/* FLOATING HEARTS */
+for(let i=0;i<15;i++){
+  const h=document.createElement("div");
+  h.className="heart";
+  h.innerText="❤️";
+  h.style.left=Math.random()*100+"%";
+  h.style.animationDuration=5+Math.random()*10+"s";
+  h.style.fontSize=15+Math.random()*25+"px";
+  matrix.appendChild(h);
+}
+
+/* WINNER LOGIC */
+const winnerList=document.getElementById("winnerList");
+const countdownEl = document.getElementById("countdown");
+
+// ✅ READ WINNERS FROM ADMIN PANEL
+const winners = JSON.parse(localStorage.getItem("winners")) || null;
+
+// Countdown before reveal
+let count=3;
+function startCountdown(cb){
+  countdownEl.textContent = count;
+  const timer = setInterval(()=>{
+    count--;
+    if(count>0){
+      countdownEl.textContent = count;
+    }else{
+      clearInterval(timer);
+      countdownEl.style.display='none';
+      cb();
+    }
+  },1000);
+}
+
+// Reveal winner with typewriter effect
+function revealWinner(name,className,delay,cb){
+  const li=document.createElement("li");
+  li.className=className;
+  winnerList.appendChild(li);
+  let i=0;
+  const txt=name + " ❤️";
+  const interval=setInterval(()=>{
+    li.textContent+=txt[i];
+    i++;
+    if(i>=txt.length){
+      clearInterval(interval);
+      li.style.animation="slideIn 1s forwards";
+      if(cb) setTimeout(cb, delay);
+    }
+  },60);
+}
+
+// Typewriter info messages
+function typeText(text,cb){
+  const li=document.createElement("li");
+  li.style.opacity="1";
+  li.style.transform="translateX(0)";
+  li.style.fontSize="14px";
+  li.style.color="#ff99ff";
+  winnerList.appendChild(li);
+  let i=0;
+  const interval=setInterval(()=>{
+    li.textContent+=text[i];
+    i++;
+    if(i>=text.length){
+      clearInterval(interval);
+      if(cb) cb();
+    }
+  },35);
+}
+
+// Main logic
+if(!winners){
+  winnerList.innerHTML="<li>No winners selected yet. Please wait for admin approval.</li>";
+}else{
+  startCountdown(()=>{
+    typeText("> Retrieving winners from Amojons secure vault...",()=>{
+      typeText("> Loading love encryption...",()=>{
+        revealWinner(winners.ultimate || "No participant","ultimate",800,()=>{
+          revealWinner(winners.vip || "No participant","vip",600,()=>{
+            revealWinner(winners.lucky || "No participant","lucky",500);
+          });
+        });
+      });
+    });
+  });
+}
+</script>
+
+</body>
+</html>
